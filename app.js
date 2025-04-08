@@ -10,8 +10,12 @@ app.set('port', port);
 
 let people = [{
         name: "John",
-        password: "Doe"
+        password: "Doe",
+        id: 0,
+        registered: Date.now()
     }]
+
+let id = 0;
 
 app.post("/sendPeople", function (req, res) {
     console.log(people)
@@ -31,7 +35,9 @@ app.post("/sendPeople", function (req, res) {
     }
     people.push({
         name: req.body.name,
-        password: req.body.password
+        password: req.body.password,
+        id: ++id,
+        registered: Date.now()
     })
     res.status(200).send("OK")
 })
@@ -40,9 +46,19 @@ app.get("/", (req, res) => {
     res.send("siema");
 })
 
-app.post("/getPeople", function (req, res) {
+app.get("/getPeople", function (req, res) {
     console.log(people)
     res.send(JSON.stringify(people));
+})
+
+app.post("/deleteperson", function (req, res) {
+    for(let i = 0; i < people.length; i++){
+        if(people[i].name == req.body.name){
+            people.splice(i, 1);
+            break;
+        }
+    }
+    res.status(200).send("OK")
 })
 
 app.listen(port, function () {
