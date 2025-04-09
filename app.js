@@ -1,68 +1,118 @@
-const cors = require('cors');
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
+import MyButton from '../components/MyButton';
+import {StyleSheet, TextInput, View, Text, Alert} from "react-native";
+import {useEffect, useState} from 'react'
 
-app.use(express.json())
-// app.use(express.urlencoded({ extended: true }));
+const Screen1 = ({ navigation }) => {
+    const [name, setName] = useState("");
+    const [password, setPassword] = useState("");
 
-app.set('port', port);
-
-let people = [{
-        name: "John",
-        password: "Doe",
-        id: 0,
-        registered: Date.now()
-    }]
-
-let id = 0;
-
-app.post("/sendPeople", function (req, res) {
-    console.log(people)
-    if(req.body.name == undefined || req.body.name.length == 0){
-        res.status(400).send("NONAME")
-        return
-    }
-    if(req.body.password == undefined || req.body.password.length == 0){
-        res.status(400).send("NOPASSWORD")
-        return
-    }
-    for(let i = 0; i < people.length; i++){
-        if(people[i].name === req.body.name){
-            res.status(400).send("USEREXISTS")
+    async function sendPerson(){
+        if(name == "" || password == "") {
+            console.log("fail")
             return;
         }
+        let res = await fetch("http://192.168.119.114:3000/sendPeople", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                password: password,
+            }),
+        });
+        return res;
     }
-    people.push({
-        name: req.body.name,
-        password: req.body.password,
-        id: ++id,
-        registered: Date.now()
-    })
-    res.status(200).send("OK")
-})
 
-app.get("/", (req, res) => {
-    res.send("siema");
-})
+    return(
+        <View style={styles.main}>
+            <View style={styles.titleContainer}>
+                <Text style={styles.h1}>Register App</Text>
+                <Text style={styles.h2}>Sign in to continue</Text>
+            </View>
+            <View style={styles.container}>
+                <TextInput inputMode="text" style={styles.input} placeholder="Name" onChangeText={(text) => setName(text)} required></TextInput>
+                <TextInput inputMode="text" style={styles.input} placeholder="Password" onChangeText={(text) => setPassword(text)} secureTextEntry={true} required></TextInput>
+                <MyButton text="Register" onPress={
+                    useEffect(async () => {
+                    let res = await sendPerson();
+                    if (res.status == 200) {
+                        navigation.navigate('s2');
+                    }else {
+                        Alert.alert("Error", "Person already exists", ["OK"]);
+                    }
+                })} style={styles}></MyButton>
+            </View>
+        </View>
+    )
+}
 
-app.get("/getPeople", function (req, res) {
-    console.log(people)
-    res.send(JSON.stringify(people));
-})
-
-app.post("/deleteperson", function (req, res) {
-    for(let i = 0; i < people.length; i++){
-        if(people[i].name == req.body.name){
-            people.splice(i, 1);
-            break;
-        }
+const styles = StyleSheet.create({
+    main: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#ededed",
+        width: "100%",
+        height: "100%",
+    },
+    input: {
+        borderBottomWidth: 2,
+        borderBottomColor: "#7777dd",
+        borderBottomStyle: "solid",
+        display: "block",
+        width: 150,
+        height: 30,
+        lineHeight: 30,
+        fontSize: 20,
+        margin: 5,
+        padding: 0,
+        textAlign: "center",
+    },
+    button: {
+        display: "block",
+        backgroundColor: "#7777dd",
+        width: "80%",
+        padding: 10,
+        borderRadius: 10,
+        margin: 15
+    },
+    buttonText: {
+        color: "#fdfdfd",
+        fontWeight: "bold",
+        fontSize: 18,
+        textAlign: "center"
+    },
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+    },
+    titleContainer: {
+        backgroundColor: "#7777dd",
+        height: 160,
+        width: "130%",
+        position: "absolute",
+        top: -20,
+        textAlign: "center",
+        borderBottomRightRadius: "100%",
+        borderBottomLeftRadius: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    h1: {
+        color: "#fdfdfd",
+        fontSize: 35,
+        width: "fit-content",
+        fontWeight: "bold"
+    },
+    h2: {
+        color: "#ffe438",
+        width: "fit-content"
     }
-    res.status(200).send("OK")
 })
 
-app.listen(port, function () {
-    console.log("start serwera na porcie " + port )
-})
-
-// app.use(express.static('static'));
+export default Screen1;
